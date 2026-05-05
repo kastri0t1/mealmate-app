@@ -163,3 +163,74 @@ $(document).ready(function () {
   });
 
 });
+// ========== MODAL ==========
+$(document).ready(function () {
+
+  // Open modal when a meal card is clicked (but NOT the heart button)
+  $(document).on('click', '.meal-card', async function (e) {
+    if ($(e.target).closest('.meal-card__fav').length) return; // ignore heart clicks
+
+    const id = $(this).data('id');
+
+    // Show spinner while loading
+    $('#modalContent').html('<div class="spinner-wrap"><i class="fa-solid fa-spinner spinner"></i></div>');
+    $('#modalOverlay').addClass('open');
+    $('body').css('overflow', 'hidden'); // prevent background scroll
+
+    const meal = await fetchMealById(id);
+    if (!meal) return;
+
+    // Build ingredient tags (API has up to 20 ingredient fields)
+    const ingredients = [];
+    for (let i = 1; i <= 20; i++) {
+      const ingredient = meal[`strIngredient${i}`];
+      const measure = meal[`strMeasure${i}`];
+      if (ingredient && ingredient.trim()) {
+        ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
+      }
+    }
+
+    const ingredientTags = ingredients
+      .map(ing => `<span class="ingredient-tag">${ing}</span>`)
+      .join('');
+
+    const youtubeBtn = meal.strYoutube
+      ? `<a href="${meal.strYoutube}" target="_blank" class="modal__youtube">
+           <i class="fa-brands fa-youtube"></i> Watch on YouTube
+         </a>`
+      : '';
+    // Render full modal content
+    $('#modalContent').html(`
+      <img class="modal__img" src="${meal.strMealThumb}" alt="${meal.strMeal}" />
+      <div class="modal__body">
+        <h2 class="modal__title">${meal.strMeal}</h2>
+        <div class="modal__meta">
+          <span><i class="fa-solid fa-tag"></i> ${meal.strCategory}</span>
+          <span><i class="fa-solid fa-globe"></i> ${meal.strArea}</span>
+        </div>
+        <div class="modal__section-title">Ingredients</div>
+        <div class="modal__ingredients">${ingredientTags}</div>
+        <div class="modal__section-title">Instructions</div>
+        <div class="modal__instructions">${meal.strInstructions}</div>
+        ${youtubeBtn}
+      </div>
+    `);
+  });
+
+  // Close modal via X button or clicking the dark overlay
+  $('#modalClose, #modalOverlay').on('click', function (e) {
+    if (e.target === this) {
+      $('#modalOverlay').removeClass('open');
+      $('body').css('overflow', '');
+    }
+  });
+
+  // Close modal with Escape key
+  $(document).on('keydown', function (e) {
+    if (e.key === 'Escape') {
+      $('#modalOverlay').removeClass('open');
+      $('body').css('overflow', '');
+    }
+  });
+
+});
