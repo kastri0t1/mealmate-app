@@ -92,3 +92,31 @@ async function init() {
 $(document).ready(function () {
   init();
 });
+// ========== SEARCH ==========
+$(document).ready(function () {
+
+  // When user clicks the search button
+  $('#searchBtn').on('click', async function () {
+    const query = $('#searchInput').val().trim();
+    if (!query) return;
+    showLoading();
+    $('#sectionTitle').text(`🔍 Results for "${query}"`);
+    $('.cat-btn').removeClass('active');
+    const meals = await fetchMealsBySearch(query);
+    renderCards(meals);
+  });
+
+  // When user presses Enter in the search input
+  $('#searchInput').on('keypress', async function (e) {
+    if (e.key === 'Enter') {
+      const query = $(this).val().trim();
+      if (!query) return;
+      showLoading();
+      $('#sectionTitle').text(`🔍 Results for "${query}"`);
+      $('.cat-btn').removeClass('active');
+      const meals = await fetchMealsBySearch(query);
+      renderCards(meals);
+    }
+  });
+
+});
