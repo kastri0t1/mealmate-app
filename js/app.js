@@ -120,3 +120,46 @@ $(document).ready(function () {
   });
 
 });
+// ========== CATEGORIES ==========
+async function loadCategories() {
+  const categories = await fetchCategories();
+  const container = $('#categoriesContainer');
+  container.empty();
+
+  // "All" button first
+  container.append('<button class="cat-btn active" data-category="all">🍽️ All</button>');
+
+  // First 12 categories only (enough choices, not too many)
+  categories.slice(0, 12).forEach(cat => {
+    container.append(
+      `<button class="cat-btn" data-category="${cat.strCategory}">${cat.strCategory}</button>`
+    );
+  });
+}
+
+$(document).ready(function () {
+
+  loadCategories();
+
+  // When a category button is clicked
+  $(document).on('click', '.cat-btn', async function () {
+    $('.cat-btn').removeClass('active');
+    $(this).addClass('active');
+
+    const category = $(this).data('category');
+    $('#searchInput').val(''); // clear search bar
+
+    if (category === 'all') {
+      showLoading();
+      $('#sectionTitle').text('🔥 Popular Meals');
+      const meals = await fetchMealsBySearch('chicken');
+      renderCards(meals);
+    } else {
+      showLoading();
+      $('#sectionTitle').text(`🍽️ ${category} Meals`);
+      const meals = await fetchMealsByCategory(category);
+      renderCards(meals);
+    }
+  });
+
+});
