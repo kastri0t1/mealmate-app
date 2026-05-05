@@ -234,3 +234,72 @@ $(document).ready(function () {
   });
 
 });
+// ========== LOCALSTORAGE FAVORITES ==========
+const FAVORITES_KEY = 'mealmate_favorites';
+
+// Get saved favorites from localStorage
+function getFavorites() {
+  return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+}
+
+// Save favorites array to localStorage
+function saveFavorites(favorites) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+}
+
+// Update the badge count on the Favorites tab
+function updateFavCount() {
+  $('#favCount').text(getFavorites().length);
+}
+
+// Add or remove a meal from favorites
+function toggleFavorite(id, name, thumb) {
+  let favorites = getFavorites();
+  const exists = favorites.some(f => f.idMeal === id);
+
+  if (exists) {
+    favorites = favorites.filter(f => f.idMeal !== id); // remove
+  } else {
+    favorites.push({ idMeal: id, strMeal: name, strMealThumb: thumb }); // add
+  }
+
+  saveFavorites(favorites);
+  updateFavCount();
+  return !exists; // true = was added
+}
+
+$(document).ready(function () {
+
+  updateFavCount(); // show count on load
+
+  // Heart button click
+  $(document).on('click', '.meal-card__fav', function (e) {
+    e.stopPropagation(); // don't open the modal
+    const btn = $(this);
+    const id = btn.data('id');
+    const name = btn.data('name');
+    const thumb = btn.data('thumb');
+
+    const isNowFav = toggleFavorite(id, name, thumb);
+    btn.toggleClass('active', isNowFav);
+    btn.find('i').attr('class', isNowFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart');
+  });
+
+  // Tab switching (Explore / My Favorites)
+  $('.tab-btn').on('click', function () {
+    $('.tab-btn').removeClass('active');
+    $(this).addClass('active');
+
+    const tab = $(this).data('tab');
+
+    if (tab === 'favorites') {
+      $('#sectionTitle').text('❤️ My Favorites');
+      $('#categoriesContainer').hide();
+      renderCards(getFavorites());
+    } else {
+      $('#categoriesContainer').show();
+      init(); // reload the default explore view
+    }
+  });
+
+});
